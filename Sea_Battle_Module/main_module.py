@@ -835,8 +835,6 @@ class Field:
         False - игра окончена, True - игра продолжается"""
         if len(self.ships) == 0:
             return True
-        elif self.get_available_cells() == []:
-            return True
         return False
 
     def get_shots_history(self) -> list:

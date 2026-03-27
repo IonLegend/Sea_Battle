@@ -11,6 +11,7 @@ WAS_BEATEN = '.'
 SHOT_MISS = 'Blunder'
 SHOT_HIT = 'Hit'
 SHOT_KILL = 'Target destroyed'
+SHOT_WAS_BEATEN = 'Was beaten'
 SHOT_ERROR = 'Invalid shot'
 # Доступные длины кораблей
 FLEET_LENGTHS = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
@@ -55,7 +56,9 @@ class Field:
                                for columns in range(1, 11)}
         
         self.forbidden_squares = set()
-        self.available_squares = self.valid_coordinates.copy()
+        self.available_squares = {f"{rows}{columns}" 
+                               for rows in 'abcdefghij' 
+                               for columns in range(1, 11)}
         self.fleet_lengths = FLEET_LENGTHS.copy()
         self.shots_history = []
         
@@ -721,6 +724,7 @@ class Field:
                 - SHOT_HIT    — попадание (корабль не уничтожен)
                 - SHOT_KILL   — корабль уничтожен
                 - SHOT_ERROR  — неверная координата
+                - SHOT_WAS_BEATEN - по координате уже стреляли
         """
 
         if not self._validation_coordinate(coordinate):
@@ -730,6 +734,7 @@ class Field:
         
         if square_condition == 'clear':
             self._write_coordinate(coordinate, WAS_BEATEN)
+            self.available_squares.discard(coordinate) # Куда стреляли - уже не доступно
             return SHOT_MISS
         
         elif square_condition == 'ship':
@@ -756,12 +761,13 @@ class Field:
                         self.shots_history.append(coordinate)
 
                         return SHOT_KILL
-                    
+                            
             self.shots_history.append(coordinate)
+
             return SHOT_HIT
         
         else:
-            return SHOT_MISS
+            return SHOT_WAS_BEATEN
 
     def random_placing(self) -> bool:
         """
@@ -828,6 +834,8 @@ class Field:
 
         False - игра окончена, True - игра продолжается"""
         if len(self.ships) == 0:
+            return True
+        elif self.get_available_cells() == []:
             return True
         return False
 

@@ -874,7 +874,7 @@ class Ship:
     def display_parameters(self):
         """ Вывод параметров корабля в консоль"""
         print()
-        print(f'КОРАБЛЬ {self.parameters['ID']}')
+        print(f"КОРАБЛЬ {self.parameters['ID']}")
         squares = self.parameters['alive coordinates']
         print (f'✅ Целые клетки: {', '.join(squares)}')
 

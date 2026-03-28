@@ -1,4 +1,5 @@
 import random
+import json
 
 # ============ КОНСТАНТЫ ==============
 # Состояния клеток
@@ -853,6 +854,71 @@ class Field:
             length = len(ship.parameters['alive coordinates']) + len(ship.parameters['hitted coordinates'])
             lengths.append(length)
         return lengths
+    
+    # ============================================
+    # СОХРАНЕНИЕ В ФАЙЛ
+    # ============================================
+
+    def save(self, filename: str) -> bool:
+        'Сохраняет доску с кораблями в указанный файл JSON'
+        data = {
+            'grid' : [row[:] for row in self.grid],
+            'ships' : [],
+            'ships_on_field' : self.ships_on_field,
+            'forbidden_squares' : list(self.forbidden_squares),
+            'available_squares' : list(self.available_squares),
+            'fleet_lengths' : self.fleet_lengths,
+            'shots_history' : self.shots_history
+        }
+
+        for ship in self.ships:
+            data['ships'].append({
+                'id' : ship.get_id(),
+                'alive coordinates' : ship.parameters['alive coordinates'],
+                'hitted coordinates' : ship.parameters['hitted coordinates'],
+                'buffer zone' : ship.parameters['buffer zone']
+            })
+        try:
+            with open(filename, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+            #print(f"✅ Сохранено в {filename}")
+            return True
+        except Exception as e:
+            #print(f"❌ Ошибка: {e}")
+            return False
+
+    @classmethod
+
+    def load(cls, filename: str):
+        'Загружает конфигурацию из файла'
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except Exception as e:
+            #print(f"❌ Ошибка загрузки: {e}")
+            return None
+
+        field = cls()
+        field.grid = [row[:] for row in data['grid']]
+        field.forbidden_squares = set(data['forbidden_squares'])
+        field.available_squares = set(data['available_squares'])
+        field.fleet_lengths = data['fleet_lengths']
+        field.shots_history = data['shots_history']
+
+        for ship_data in data['ships']:
+            ship = Ship()  
+            ship.id = ship_data['id']
+            ship.parameters['alive coordinates'] = ship_data['alive coordinates']
+            ship.parameters['hitted coordinates'] = ship_data['hitted coordinates']
+            ship.parameters['buffer zone'] = ship_data['buffer zone']
+            ship.parameters['ID'] = ship_data['id']
+            ship.parameters['alive'] = len(ship_data['alive coordinates']) > 0
+            ship._set_field(field)
+
+            field.ships.append(ship) 
+        for ship in data['ships_on_field']:
+            field.ships_on_field.append(ship) 
+        return field 
 
 
 class Ship:
@@ -876,19 +942,19 @@ class Ship:
         print()
         print(f"КОРАБЛЬ {self.parameters['ID']}")
         squares = self.parameters['alive coordinates']
-        print (f'✅ Целые клетки: {', '.join(squares)}')
+        print (f"✅ Целые клетки: {', '.join(squares)}")
 
         hitted_squares = self.parameters['hitted coordinates']
-        print (f'💥 Раненые клетки: {', '.join(hitted_squares)}')
+        print (f"💥 Раненые клетки: {', '.join(hitted_squares)}")
 
         alive = self.parameters['alive']
-        print (f'❓ Живой?: {alive}')
+        print (f"❓ Живой?: {alive}")
 
         ID = self.parameters['ID']
-        print (f'🆔 Уникальный номер: {ID}')
+        print (f"🆔 Уникальный номер: {ID}")
 
         buffer = self.parameters['buffer zone']
-        print (f'📋 Буферная зона: {', '.join(buffer)}')
+        print (f"📋 Буферная зона: {', '.join(buffer)}")
         print()
         
         return self.parameters

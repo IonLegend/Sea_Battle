@@ -62,7 +62,7 @@ if field.is_game_over():
 
 | Метод | Описание |
 |-------|----------|
-| `get_available_cells()` | Список клеток для выстрела |
+| `get_available_cells()` | Список клеток для расстановки кораблей |
 | `get_neighbours(coord)` | Соседние клетки |
 | `cell_state(coord)` | Состояние клетки |
 | `get_remaining_ships_lengths()` | Длины оставшихся кораблей |

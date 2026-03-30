@@ -1,3 +1,4 @@
+"""Основной модуль библиотеки"""
 import random
 import json
 
@@ -18,6 +19,7 @@ SHOT_ERROR = 'Invalid shot'
 FLEET_LENGTHS = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
 
 class Field:
+    """Класс Игрового поля"""
     # ============================================
     # ИНИЦИАЛИЗАЦИЯ
     # ============================================
@@ -52,19 +54,19 @@ class Field:
         self.ships_on_field = []
         self.ships = []
 
-        self.valid_coordinates = {f"{rows}{columns}" 
-                               for rows in 'abcdefghij' 
+        self.valid_coordinates = {f"{rows}{columns}"
+                               for rows in 'abcdefghij'
                                for columns in range(1, 11)}
-        
+
         self.forbidden_squares = set()
-        self.available_squares = {f"{rows}{columns}" 
-                               for rows in 'abcdefghij' 
+        self.available_squares = {f"{rows}{columns}"
+                               for rows in 'abcdefghij'
                                for columns in range(1, 11)}
         self.fleet_lengths = FLEET_LENGTHS.copy()
         self.shots_history = []
-        
+
     # ============================================
-    # ОТОБРАЖЕНИЕ 
+    # ОТОБРАЖЕНИЕ
     # ============================================
 
     def display(self) -> None:
@@ -73,7 +75,7 @@ class Field:
         '''
 
         print ('  1 2 3 4 5 6 7 8 9 10')
-        letters = 'ABCDEFGHIJ' 
+        letters = 'ABCDEFGHIJ'
         count_letters = 0
         for line in self.grid:
             print (letters[count_letters], *line)
@@ -83,10 +85,10 @@ class Field:
         '''
          Печатает доску в консоль (без кораблей)
         '''
-        
-        grid_clear = [row[:] for row in self.grid] # Делаем срез каждой строки (глубокое копирование)
+
+        grid_clear = [row[:] for row in self.grid] # Делаем глубокое копирование
         print ('  1 2 3 4 5 6 7 8 9 10')
-        letters = 'ABCDEFGHIJ' 
+        letters = 'ABCDEFGHIJ'
         count_letters = 0
         for line in grid_clear:
             for i in range(len(line)):
@@ -99,7 +101,7 @@ class Field:
         '''
         Очищает доску и удаляет все корабли
         '''
-        
+
         for line in self.grid:
             for i in range(len(line)):
                 if line[i] != CLEAR:
@@ -117,32 +119,31 @@ class Field:
     def get_grid(self, hide_ships: bool) -> list[list[str]]:
         """
         Возвращает копию сетки 10×10.
-    
+
         Символы в сетке:
             ' ' — пустая клетка
             '1' — живой корабль (если hide_ships=False)
             'x' — попадание (корабль ранен)
             'X' — уничтоженный корабль
             '.' — промах
-    
+
         Args:
             hide_ships: если True, заменяет '1' на ' '
         """
-        
-        if hide_ships == False:
+
+        if not hide_ships:
             return [row[:] for row in self.grid]
-        
-        elif hide_ships == True:
+
+        if hide_ships is True:
             grid_clear = [row[:] for row in self.grid]
             for line in grid_clear:
                 for i in range(len(line)):
                     if line[i] == SHIP:
                         line[i] = CLEAR
             return grid_clear
-        
-        else:
-            return []
-    
+
+        return []
+
     def get_ship_information(self) -> list[dict]:
         """ Выводит информацию по всем кораблям """
         information = []
@@ -157,7 +158,7 @@ class Field:
 
     def get_statistics(self) -> dict:
         """ Выводит статистику по всему полю """
-        
+
         return {
             'surviving ships': len(self.ships),
             'ships length' : self.fleet_lengths,
@@ -168,37 +169,37 @@ class Field:
 
     # ============================================
     #  ВАЛИДАЦИЯ
-    # ============================================
+    # ============================================``
 
     def _validation_coordinate_log(self, coordinate : str) -> bool:
         """
         Проверяет координату на валидность с подробным выводом ошибок.
-    
+
         Использует полную проверку: тип, длина, буква, число.
         При ошибке печатает сообщение в консоль.
-    
+
         Args:
             coordinate (str): Координата в формате 'a1'..'j10'
-    
+
         Returns:
             bool: True — координата валидна, False — невалидна
         """
-        
+
         rows_letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']
         columns_numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
         if type(coordinate) is not str:
             print ('Error: Type of coordinate must be string')
             return False
-        
+
         if len(coordinate) < 2 or len(coordinate) >= 4: # Контроль длины координаты
             print('Error: Invalid coordinate length')
             return False
-         
+
         if coordinate[0] not in rows_letters:# Проверка правильности ряда
             print('Error: Invalid rows name')
             return False
-        
+
         try:
             if int(coordinate[1:]) not in columns_numbers: # Проверка правильности столбца
                 print('Error: Invalid column number')
@@ -206,26 +207,26 @@ class Field:
         except ValueError:
             print ('Error: Column must be number')
             return False
-        
+
         return True
-    
-    def _validation_coordinate(self, coordinate : str) -> bool:
+
+    def validation_coordinate(self, coordinate : str) -> bool:
         """
         Проверяет координату на валидность
-        
+
         Args:
             coordinate (str): Координата в формате 'a1'..'j10'
-    
+
         Returns:
             bool: True — координата валидна, False — невалидна
         """
         if type(coordinate) is not str:
             return False
-        
+
         if coordinate not in self.valid_coordinates:
             return False
         return True
-    
+
     def _ship_line_validation(self, coordinate_line) -> bool:
         """Валидация поступающей линии из координат
 
@@ -234,34 +235,33 @@ class Field:
         False - линия невалидна"""
         if type(coordinate_line) is not str:
             return False
-        
+
         coordinates = coordinate_line.split('-') # Выделили каждую координату
-        
+
         for cor in coordinates: # Отвалидировали отдельно
-            if not self._validation_coordinate(cor):
+            if not self.validation_coordinate(cor):
                 return False
-        
+
         letters = [] # список букв координат
         numbers = [] # списко цифр координат
-    
+
         for cor in coordinates:
             letters.append(cor[0])
             numbers.append(int(cor[1:]))
         numbers.sort()
 
-        letter_equal = self._letter_equal(letters) # Проверка на равность       
+        letter_equal = self._letter_equal(letters) # Проверка на равность
         number_equal = self._number_equal(numbers) # Проверка на равность
         letter_in_order = self._letter_in_order(letters) # Проверка на последовательность
         number_in_order = self._number_in_order(numbers) # Проверка на последовательность
-        
-        
-        if number_in_order == True and letter_equal == True:
+
+
+        if number_in_order is True and letter_equal is True:
             return True
-        if number_equal and letter_in_order == True: 
+        if number_equal is True and letter_in_order is True:
             return True
-        else:
-            return False
-    
+        return False
+
     # ============================================
     #  ПРОВЕРКА ЛИНИЙ КОРАБЛЯ
     # ============================================
@@ -270,8 +270,7 @@ class Field:
         """Проверка, одинаковы ли все буквы"""
         if len(set(letters)) == 1:
             return True
-        else:
-            return False
+        return False
 
     def _letter_in_order(self, letters) -> bool:
         """Проверка, стоят ли буквы в последовательности"""
@@ -292,8 +291,7 @@ class Field:
 
         if len(set(list_for_difference)) == 1:
             return True
-        else:
-            return False
+        return False
 
     def _number_in_order(self, numbers) -> bool:
         """Проверка, одинаковы ли все цифры"""
@@ -305,14 +303,13 @@ class Field:
             else:
                 number_in_order = True
         return number_in_order
-    
+
     def _number_equal(self, numbers) -> bool:
         """Проверка, стоят ли цифры в последовательности"""
         if len(set(numbers)) == 1:
             return True
-        else:
-            return False
- 
+        return False
+
     # ============================================
     #  РАБОТА С КООРДИНАТАМИ
     # ============================================
@@ -320,10 +317,10 @@ class Field:
     def cell_state(self, coordinate: str) -> (str | None):
         """
         Возвращает состояние клетки по её координате.
-    
+
         Args:
             coordinate (str): Координата в формате 'a1'..'j10'
-    
+
         Returns:
             Optional[str]: Состояние клетки:
                 - 'clear'      — пустая клетка
@@ -332,7 +329,7 @@ class Field:
                 - 'destroyed'  — корабль уничтожен
                 - 'was beaten' — промах (клетка обстреляна)
                 - None         — координата невалидна
-    
+
         Examples:
             >>> field = Field()
             >>> field.auto_add_ship('a1-b1-c1', 3)
@@ -344,40 +341,40 @@ class Field:
             'hitted'
         """
 
-        if not self._validation_coordinate(coordinate):
+        if not self.validation_coordinate(coordinate):
             return None
-        
+
         # Valid Coordinate
-        square_data = self.grid[self.rows[coordinate[0]]][self.columns[coordinate[1:]]] # Точное нахождение координаты
-        
+        square_data = self.grid[self.rows[coordinate[0]]][self.columns[coordinate[1:]]]
+
         square_condition = 'clear'
 
         if square_data == CLEAR:
             return square_condition
-        
+
         if square_data == HITTED:
             square_condition = 'hitted'
-            return square_condition    
-        
+            return square_condition
+
         if square_data == DESTROYED:
             square_condition = 'destroyed'
-            return square_condition 
-        
+            return square_condition
+
         if square_data == SHIP:
             square_condition = 'ship'
-            return square_condition 
-        
+            return square_condition
+
         if square_data == WAS_BEATEN:
             square_condition = 'was beaten'
-            return square_condition        
-    
+            return square_condition
+
     def coord_to_index(self, coordinate: str) -> tuple[int, int]:
         """
         Преобразует строковую координату в индексы для доступа к grid.
-    
+
         Args:
             coordinate (str): Координата в формате 'a1'..'j10'
-    
+
         Returns:
 
               Tuple[int, int]: (строка, столбец) — оба от 0 до 9
@@ -388,15 +385,15 @@ class Field:
         # coordinate[1:] — число ('1' или '10'), ищем индекс в columns
         y = self.columns[coordinate[1:]]  # '1' → 0
         return x, y
-    
+
     def index_to_coord(self, x: int, y: int) -> (str | None):
         """
         Преобразует индексы строки и столбца в строковую координату.
-    
+
         Args:
             x (int): Индекс строки (0..9)
             y (int): Индекс столбца (0..9)
-    
+
         Returns:
             Optional[str]: Координата в формате 'a1'..'j10',
                       или None если индексы выходят за границы поля"""
@@ -406,34 +403,33 @@ class Field:
             if index == x:
                 letter = l
                 break
-    
+
         # Ищем число: перебираем columns, где значение равно y
         number = None
         for n, idx in self.columns.items():
             if idx == y:
                 number = n
                 break
-    
+
         if letter != None and number != None:
             return letter + number
-        else:
-            return None
-    
+        return None
+
     def _write_coordinate(self, coordinate: str, DATA: str) -> bool:
         """Изменение состояния координаты на DATA"""
-        if not self._validation_coordinate(coordinate):
+        if not self.validation_coordinate(coordinate):
             return False
         rows = self.rows[coordinate[0]]
         columns = self.columns[coordinate[1:]]
         self.grid[rows][columns] = DATA
-        return True    
-    
-    def get_neighbours(self, coordinate: str) -> list: 
+        return True
+
+    def get_neighbours(self, coordinate: str) -> list:
         """Возвращает соседние клетки координаты"""
         return list(self._create_buffer_zone(coordinate))
-    
+
     def get_available_cells(self) -> list[str]:
-        """Возвращает доступные клетки"""
+        """Возвращает доступные для постановки корабля клетки"""
         return list(self.available_squares)
 
     def get_valide_cells(self) -> list[str]:
@@ -443,7 +439,7 @@ class Field:
     def _get_forbidden_squares(self) -> list[str]:
         """Возвращает запрещённые клетки"""
         return list(self.forbidden_squares)
-    
+
     def _generate_horizontal_coords(self, length: int) -> str:
         """Генерирует случайную горизонтальную линию"""
 
@@ -455,7 +451,7 @@ class Field:
         coordinate_line = [f"{row}{start + i}" for i in range(length)]
 
         return '-'.join(coordinate_line)
-    
+
     def _generate_vertical_coords(self, length: int) -> str:
         """Генерирует случайную вертикальную линию"""
 
@@ -465,21 +461,21 @@ class Field:
         max_start = len(letters) - length
 
         start_letter = random.randint(0, max_start)
-        our_number = random.choice(numbers) 
+        our_number = random.choice(numbers)
 
         our_letters = letters[start_letter : start_letter + length] # Срез из букв
-        
-        
+
+
         coordinate_line = []
         for letter in our_letters:
             coordinate_line.append(letter + str(our_number))
-        
+
         return '-'.join(coordinate_line)
-    
+
     # ============================================
     # БУФЕР
     # ============================================
-    
+
     def _create_buffer_zone(self, coordinate_line: str) -> set:
         """Создает и возвращает координаты буферной зоны для линии"""
         coordinates = coordinate_line.split('-') # Выделили каждую координату
@@ -513,7 +509,7 @@ class Field:
         """Функция возвращает название корабля"""
         if length == 1:
             ship_name = 'Speedboat'
-        elif length == 2:           
+        elif length == 2:
             ship_name = 'Destroyer'
         elif length == 3:
             ship_name = 'Cruiser'
@@ -521,7 +517,7 @@ class Field:
             ship_name = 'Battleship'
         else:
             ship_name = 'Invalid length'
-        
+
         return ship_name
 
     def can_place_ship(self, coordinate_line: str, length: int) -> bool:
@@ -530,19 +526,19 @@ class Field:
 
         if length != len(coordinates): # Обработал длину корабля
             return False
-        
+
         if not self._ship_line_validation(coordinate_line):
             return False
-        
+
         for coordinate in coordinates:
             if coordinate in self.forbidden_squares: # Проверка на наличие в запрещённом списке
                 return False
         return True
 
-    def auto_add_ship(self, coordinate_line: str, length: int) -> bool:   
+    def auto_add_ship(self, coordinate_line: str, length: int) -> bool:
         """
     Добавляет корабль на поле по заданной линии координат.
-    
+
     Процесс добавления:
         1. Проверяет соответствие длины количеству координат
         2. Проверяет, что такая длина ещё не превысила лимит (через fleet_lengths)
@@ -556,14 +552,14 @@ class Field:
         10. Обновляет forbidden_squares и available_squares буферной зоной
         11. Сохраняет корабль в списки ships и ships_on_field
         12. Удаляет длину из fleet_lengths (больше нельзя добавить такой же)
-    
+
     Args:
         coordinate_line (str): Линия координат через дефис, например 'a1-b1-c1'
         length (int): Длина корабля (должна совпадать с количеством координат)
-    
+
     Returns:
         bool: True — корабль успешно добавлен, False — ошибка (причина выводится в консоль)
-    
+
     Examples:
         >>> field = Field()
         >>> field.auto_add_ship('a1-b1-c1', 3)  # трёхпалубный
@@ -572,7 +568,7 @@ class Field:
         False
         >>> field.auto_add_ship('a1-b1', 2)     # двухпалубный в ту же клетку
         False  # клетка a1 уже занята
-    
+
     Note:
         После успешного добавления длина удаляется из fleet_lengths.
         Это гарантирует, что в игре будет правильное количество кораблей.
@@ -584,10 +580,10 @@ class Field:
         if length != len(coordinates): # Обработал длину корабля
             # Error: invalid length of coordinate line
             return False
-        
+
         if length not in self.fleet_lengths:
             return False
-        
+
         ship = Ship()
         ship_name = self.get_ship_name(length)
 
@@ -595,7 +591,7 @@ class Field:
         ship._set_field(self)
         if not self._ship_line_validation(coordinate_line):
             return False
-        
+
         added_coordinates = [] # координаты, которые выставлены (чтобы удалить только их, не трогая другое)
         for coordinate in coordinates:
 
@@ -607,13 +603,12 @@ class Field:
                     self.forbidden_squares.remove(coord)
                     self.available_squares.add(coord)
                     ship._delete_coordinate_in_ship(coord)
-                
+
                 return False
-            
-            
+
             # Добавляем координату в корабль
             result = ship._set_coordinate_in_ship(coordinate)
-        
+
             if result:
                 # Отмечаем корабль на поле (например, ставим '1')
                 self._write_coordinate(coordinate, SHIP)
@@ -626,7 +621,7 @@ class Field:
         buffer = self._create_buffer_zone(coordinate_line)
         self.forbidden_squares.update(buffer)
         self.available_squares.difference_update(buffer)
-        ship.parameters['buffer zone'] = list(buffer)    
+        ship.parameters['buffer zone'] = list(buffer)
 
         # Добавляем в списки корабль с ID
         self.ships_on_field.append((ship.get_id(), ship_name))
@@ -654,19 +649,19 @@ class Field:
                 break
 
         if not target_ship:
-            return False 
+            return False
         old_id = target_ship.get_id()
 
         if not self.delete_ship(coordinate_line_from):
             return False
-        
+
         old_ids = []
         for ship in self.ships:
             old_ids.append(ship.get_id())
-        
+
         if not self.auto_add_ship(coordinate_line_to, length):
             return False
-        
+
         for ship in self.ships:
             if ship.get_id() not in old_ids:
                 ship.parameters['ID'] = old_id
@@ -676,16 +671,16 @@ class Field:
                         self.ships_on_field[i] = (old_id, name)
                         break
                 return True
-        
+
         return False
-        
+
     def delete_ship(self, coordinate_line) -> bool:
         """Удаление корабля"""
         coordinate = coordinate_line.split('-')
         length = len(coordinate)
-        for ship in self.ships:  
+        for ship in self.ships:
             if ship.ship_in_coordinate(coordinate[0]): # Если координата принадлежит кораблю
-                
+
                 ID = ship.get_id()
 
                 for coord in coordinate:
@@ -701,24 +696,24 @@ class Field:
                 self._delete_from_ship_list(ID)
                 self.fleet_lengths.append(length)
                 return True
-            
+
         return False
-    
+
     def _delete_from_ship_list(self, ID) -> bool:
         # Удаление корабля из списка ships_on_field
-        for i in reversed(range(len(self.ships_on_field))): 
+        for i in reversed(range(len(self.ships_on_field))):
             if self.ships_on_field[i][0] == ID:
                 self.ships_on_field.pop(i)
                 return True
         return False
-    
+
     def shot(self, coordinate: str) -> str:
         """
         Производит выстрел по указанной координате.
-    
+
         Args:
             coordinate (str): Координата в формате 'a1'..'j10'
-    
+
         Returns:
             str: Результат выстрела:
                 - SHOT_MISS   — промах
@@ -728,16 +723,16 @@ class Field:
                 - SHOT_WAS_BEATEN - по координате уже стреляли
         """
 
-        if not self._validation_coordinate(coordinate):
+        if not self.validation_coordinate(coordinate):
             return SHOT_ERROR
-        
+
         square_condition = self.cell_state(coordinate)
-        
+
         if square_condition == 'clear':
             self._write_coordinate(coordinate, WAS_BEATEN)
             self.available_squares.discard(coordinate) # Куда стреляли - уже не доступно
             return SHOT_MISS
-        
+
         elif square_condition == 'ship':
 
             for ship in self.ships: # Для каждого корабля
@@ -753,7 +748,7 @@ class Field:
 
                         for coord in replace_list:
                             self._write_coordinate(coord, DESTROYED) # Меняем "х" на "Х"
-                        
+
                         for buffer in ship.parameters['buffer zone']: # Отмечаем буфферную зону
                             self._write_coordinate(buffer, WAS_BEATEN)
 
@@ -762,29 +757,28 @@ class Field:
                         self.shots_history.append(coordinate)
 
                         return SHOT_KILL
-                            
+
             self.shots_history.append(coordinate)
 
             return SHOT_HIT
-        
-        else:
-            return SHOT_WAS_BEATEN
+
+        return SHOT_WAS_BEATEN
 
     def random_placing(self) -> bool:
         """
     Автоматическая расстановка всех кораблей на поле.
-    
+
     Returns:
         bool: True — все корабли расставлены успешно,
               False — расстановка не удалась (поле очищено)
-    
+
     Warning:
         Метод может выполняться долго (до 1 секунды) из-за большого числа попыток.
         Если расстановка не удалась, поле очищается — повторный вызов начнёт заново.
     """
         # Сохраняем копию длин
         lengths_to_place = FLEET_LENGTHS.copy()
-        
+
         # Очищаем поле
         self.field_game_reset()
 
@@ -792,19 +786,19 @@ class Field:
 
             placed = False
             our_strategy = random.choice(['horizontal', 'vertical'])
-            
+
             for _ in range(500):
-                
+
                 if our_strategy == 'horizontal':
 
                     coordinate_line = self._generate_horizontal_coords(length)
 
                     if self.can_place_ship(coordinate_line, length):
-                        
+
                         self.auto_add_ship(coordinate_line, length)
                         placed = True
                         break
-                
+
                 else:
                     coordinate_line = self._generate_vertical_coords(length)
 
@@ -813,19 +807,18 @@ class Field:
                         placed = True
                         break
 
-            if placed == False:
+            if placed is False:
                 self.field_game_reset()
-                return False  
-        
+                return False
         return True
-    
+
     def find_from_id(self, id):
         """Возвращает корабль по ID, в случае неудачи - None"""
         for ship in self.ships:
             if id == ship.get_id():
                 return ship
         return None
-    
+
     # ============================================
     # ЛОГИКА ДЛЯ ИГРЫ
     # ============================================
@@ -845,7 +838,7 @@ class Field:
     def get_remaining_ships_lengths(self) -> list[int]:
         """
         Возвращает длины всех оставшихся (не уничтоженных) кораблей.
-    
+
         Returns:
             list[int]: Список длин кораблей, например [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
         """
@@ -854,7 +847,7 @@ class Field:
             length = len(ship.parameters['alive coordinates']) + len(ship.parameters['hitted coordinates'])
             lengths.append(length)
         return lengths
-    
+
     # ============================================
     # СОХРАНЕНИЕ В ФАЙЛ
     # ============================================
@@ -883,8 +876,7 @@ class Field:
                 json.dump(data, f, indent=2, ensure_ascii=False)
             #print(f"✅ Сохранено в {filename}")
             return True
-        except Exception as e:
-            #print(f"❌ Ошибка: {e}")
+        except Exception:
             return False
 
     @classmethod
@@ -894,8 +886,7 @@ class Field:
         try:
             with open(filename, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-        except Exception as e:
-            #print(f"❌ Ошибка загрузки: {e}")
+        except Exception:
             return None
 
         field = cls()
@@ -906,7 +897,7 @@ class Field:
         field.shots_history = data['shots_history']
 
         for ship_data in data['ships']:
-            ship = Ship()  
+            ship = Ship()
             ship.id = ship_data['id']
             ship.parameters['alive coordinates'] = ship_data['alive coordinates']
             ship.parameters['hitted coordinates'] = ship_data['hitted coordinates']
@@ -915,14 +906,14 @@ class Field:
             ship.parameters['alive'] = len(ship_data['alive coordinates']) > 0
             ship._set_field(field)
 
-            field.ships.append(ship) 
+            field.ships.append(ship)
         for ship in data['ships_on_field']:
-            field.ships_on_field.append(ship) 
-        return field 
+            field.ships_on_field.append(ship)
+        return field
 
 
 class Ship:
-    
+    """Класс Корабля"""
     def __init__(self):
         self.id = random.randint(1, 1000)
         self.parameters = {
@@ -936,7 +927,7 @@ class Ship:
 
     def _set_field(self, field):
         self.field = field
-   
+
     def display_parameters(self):
         """ Вывод параметров корабля в консоль"""
         print()
@@ -956,31 +947,31 @@ class Ship:
         buffer = self.parameters['buffer zone']
         print (f"📋 Буферная зона: {', '.join(buffer)}")
         print()
-        
+
         return self.parameters
-    
-    def _set_coordinate_in_ship(self, coordinate: str) -> bool: 
+
+    def _set_coordinate_in_ship(self, coordinate: str) -> bool:
         """Добавляет координату в корабль"""
-        coordinate_validated = self.field._validation_coordinate(coordinate)
+        coordinate_validated = self.field.validation_coordinate(coordinate)
 
         if not coordinate_validated:
             return False
-        
+
         self.parameters['alive coordinates'].append(coordinate)
         return True
-    
-    def _delete_coordinate_in_ship(self, coordinate: str) -> bool: 
+
+    def _delete_coordinate_in_ship(self, coordinate: str) -> bool:
         """Удаляет координату у корабля"""
-        coordinate_validated = self.field._validation_coordinate(coordinate)
+        coordinate_validated = self.field.validation_coordinate(coordinate)
 
         if not coordinate_validated:
             return False
         self.parameters['alive coordinates'].remove(coordinate)
         return True
-    
-    def _kill_coordinate_in_ship(self, coordinate:str) -> bool: 
+
+    def _kill_coordinate_in_ship(self, coordinate:str) -> bool:
         """Перемещает координату в параметрах корабля из живых в мертвые"""
-        coordinate_validated = self.field._validation_coordinate(coordinate)
+        coordinate_validated = self.field.validation_coordinate(coordinate)
 
         if not coordinate_validated:
             return False
@@ -990,14 +981,14 @@ class Ship:
 
     def ship_in_coordinate(self, coordinate: str) -> bool:
         """Проверяет, стоит ли корабль на данной клетке"""
-        coordinate_validated = self.field._validation_coordinate(coordinate)
+        coordinate_validated = self.field.validation_coordinate(coordinate)
         if not coordinate_validated:
             return False
-        
+
         if coordinate in self.parameters['alive coordinates']:
             return True
         return False
-    
+
     # ============================================
     # ЛОГИКА ДЛЯ ИГРЫ
     # ============================================
@@ -1007,12 +998,12 @@ class Ship:
         if len(self.parameters['alive coordinates']) == 0:
             return False
         return True
-    
+
     def get_died_coordinate(self):
         """Возвращает список мёртвых координат корабля"""
         return self.parameters['hitted coordinates']
 
     def get_id(self):
-         """Возвращает ID"""
-         return self.parameters['ID']
-    
+        """Возвращает ID"""
+        return self.parameters['ID']
+

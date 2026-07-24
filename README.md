@@ -42,7 +42,7 @@ SeaBattle решает эти проблемы:
 
 ```python
 from seabattle_core import *
-
+```
 
 ## Быстрый старт
 
